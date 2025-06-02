@@ -37,6 +37,16 @@ services:
     networks:
       - postgres_network
 
+    metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    depends_on:
+      - postgres
+    ports:
+      - "5434:3000"
+    networks:
+      - postgres_network
+
     redis:
       image: redis:6
       container_name: redash_redis
