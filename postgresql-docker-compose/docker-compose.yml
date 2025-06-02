@@ -45,7 +45,7 @@ services:
         - postgres_network
   
     redash-server:
-      image: redash/redash:10.1.0.b50633
+      image: redash/redash:latest
       container_name: redash_server
       depends_on:
         - postgres
@@ -63,7 +63,7 @@ services:
         - postgres_network
   
     redash-worker:
-      image: redash/redash:10.1.0.b50633
+      image: redash/redash:latest
       container_name: redash_worker
       depends_on:
         - redash-server
@@ -79,7 +79,7 @@ services:
         - postgres_network
   
     redash-scheduler:
-      image: redash/redash:10.1.0.b50633
+      image: redash/redash:latest
       container_name: redash_scheduler
       depends_on:
         - redash-server
