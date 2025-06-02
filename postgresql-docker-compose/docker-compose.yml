@@ -37,6 +37,62 @@ services:
     networks:
       - postgres_network
 
+    redis:
+      image: redis:6
+      container_name: redash_redis
+      restart: unless-stopped
+      networks:
+        - postgres_network
+  
+    redash-server:
+      image: redash/redash:10.1.0.b50633
+      container_name: redash_server
+      depends_on:
+        - postgres
+        - redis
+      env_file:
+        - .env
+      environment:
+        REDASH_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+        REDASH_REDIS_URL: "redis://redis:6379/0"
+        REDASH_SECRET_KEY: ${REDASH_SECRET_KEY}
+      ports:
+        - "5000:5000"
+      command: server
+      networks:
+        - postgres_network
+  
+    redash-worker:
+      image: redash/redash:10.1.0.b50633
+      container_name: redash_worker
+      depends_on:
+        - redash-server
+      env_file:
+        - .env
+      environment:
+        REDASH_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+        REDASH_REDIS_URL: "redis://redis:6379/0"
+        QUEUES: "queries,scheduled_queries,celery"
+        WORKERS_COUNT: 2
+      command: worker
+      networks:
+        - postgres_network
+  
+    redash-scheduler:
+      image: redash/redash:10.1.0.b50633
+      container_name: redash_scheduler
+      depends_on:
+        - redash-server
+      env_file:
+        - .env
+      environment:
+        REDASH_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+        REDASH_REDIS_URL: "redis://redis:6379/0"
+        QUEUES: "scheduled_queries"
+      command: scheduler
+      networks:
+        - postgres_network
+
 volumes:
   postgresql_data:
     driver: local
